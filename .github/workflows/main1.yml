@@ -6,7 +6,7 @@ on:
 jobs:
   macos-vnc:
     # تغییر به نسخه 13 معمولاً سریع‌تر رانر پیدا می‌کند
-    runs-on: macos-13 
+    runs-on: macos-12
     steps:
       - name: Install noVNC and Cloudflared
         run: |
