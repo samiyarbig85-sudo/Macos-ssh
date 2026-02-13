@@ -1,0 +1,44 @@
+name: macOS-Web-VNC-Cloudflare
+
+on:
+  workflow_dispatch:
+
+jobs:
+  macos-vnc:
+    # تغییر به نسخه 13 معمولاً سریع‌تر رانر پیدا می‌کند
+    runs-on: macos-13 
+    steps:
+      - name: Install noVNC and Cloudflared
+        run: |
+          brew install cloudflared tiger-vnc
+          git clone https://github.com/novnc/noVNC.git /tmp/novnc
+
+      - name: Setup VNC Server
+        run: |
+          mkdir -p ~/.vnc
+          echo "123456" | vncpasswd -f > ~/.vnc/passwd
+          chmod 600 ~/.vnc/passwd
+          vncserver :1 -geometry 1280x720 -depth 24 -localhost no
+
+      - name: Start Web Proxy (noVNC)
+        run: |
+          /tmp/novnc/utils/novnc_proxy --vnc localhost:5901 --listen 6080 &
+
+      - name: Start Cloudflare Tunnel
+        run: |
+          cloudflared tunnel --url http://localhost:6080 > cloudflare.log 2>&1 &
+          
+      - name: Get Web Link
+        run: |
+          sleep 20
+          echo "=========================================="
+          echo "🌐 OPEN THIS LINK IN CHROME:"
+          grep -o 'https://[-0-9a-z]*\.trycloudflare.com' cloudflare.log
+          echo "------------------------------------------"
+          echo "🔑 Password: 123456"
+          echo "=========================================="
+
+      - name: Keep Alive
+        run: |
+          while true; do sleep 300; done
+          
